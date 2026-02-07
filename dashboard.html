@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eCommerce Analytics Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            padding: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.12);
+            text-align: center;
+        }
+        .metric-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .chart-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .insight-card {
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid;
+        }
+        .insight-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .insight-info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        .insight-warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .insight-card h4 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .insight-card p {
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .summary {
+            background: #f0f4ff;
+            border: 2px solid #667eea;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .summary h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .summary p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .summary ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        .summary li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 40px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 eCommerce Analytics Dashboard</h1>
+            <p>Real-time analytics powered by dbt + DuckDB</p>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>Total Revenue</h3>
+                <div class="value">$2,077,746</div>
+            </div>
+            <div class="metric-card">
+                <h3>Total Orders</h3>
+                <div class="value">2,051</div>
+            </div>
+            <div class="metric-card">
+                <h3>Avg Order Value</h3>
+                <div class="value">$778.59</div>
+            </div>
+            <div class="metric-card">
+                <h3>Total Margin</h3>
+                <div class="value">$1,037,859</div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">📦 Revenue by Category</div>
+                <div id="chart1" style="width:100%;height:400px;"></div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">⭐ Top 10 Products</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Revenue</th>
+                                <th>Margin %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td>Product 54</td>
+                                <td>$48,656</td>
+                                <td>79.6%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 74</td>
+                                <td>$42,611</td>
+                                <td>70.8%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 95</td>
+                                <td>$41,107</td>
+                                <td>51.6%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 34</td>
+                                <td>$37,610</td>
+                                <td>53.6%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 2</td>
+                                <td>$37,317</td>
+                                <td>51.0%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 13</td>
+                                <td>$37,161</td>
+                                <td>49.3%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 68</td>
+                                <td>$37,032</td>
+                                <td>53.6%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 14</td>
+                                <td>$36,951</td>
+                                <td>33.1%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 81</td>
+                                <td>$36,878</td>
+                                <td>98.2%</td>
+                            </tr>
+    
+                            <tr>
+                                <td>Product 59</td>
+                                <td>$36,598</td>
+                                <td>73.5%</td>
+                            </tr>
+    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">👥 User Cohorts by Account Age</div>
+                <div id="chart2" style="width:100%;height:400px;"></div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">🛒 Event Funnel</div>
+                <div id="chart3" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">📅 Daily Revenue Trend (Last 30 Days)</div>
+                <div id="chart4" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">💎 Top 10 Customers by Lifetime Value</div>
+                <div id="chart5" style="width:100%;height:400px;"></div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">📊 Category Performance (Latest Month)</div>
+                <div id="chart6" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">� Category Revenue Trend Over Time</div>
+                <div id="chart8" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+        
+        <h2 style="margin-bottom: 20px; color: #333;">💡 Key Insights</h2>
+        <div class="insights">
+            <div class="insight-card insight-success">
+                <h4>🏆 Top Performing Category</h4>
+                <p><strong>Sports</strong> leads with <strong>$527,297</strong> in revenue (512 orders)</p>
+            </div>
+            <div class="insight-card insight-info">
+                <h4>⭐ Best Product</h4>
+                <p><strong>Product 54</strong> generated <strong>$48,656</strong> in revenue with 79.6% margin</p>
+            </div>
+            <div class="insight-card insight-warning">
+                <h4>📱 Newest Users (0-30 days)</h4>
+                <p><strong>34</strong> users, avg <strong>$774.13</strong>/order</p>
+            </div>
+            <div class="insight-card insight-info">
+                <h4>🎯 Conversion Rate</h4>
+                <p><strong>97.9%</strong> of users completed a purchase (473/483 users)</p>
+            </div>
+        </div>
+        
+        <div class="summary">
+            <h3>📝 Executive Summary</h3>
+            <p>This eCommerce analytics dashboard reveals a healthy and growing business with strong performance across all metrics.</p>
+            
+            <p><strong>Revenue Highlights:</strong></p>
+            <ul>
+                <li>Total revenue: <strong>$2,077,746</strong></li>
+                <li>Average order value: <strong>$778.59</strong></li>
+                <li>Total profit margin: <strong>$1,037,859</strong></li>
+                <li>5 product categories performing well</li>
+            </ul>
+            
+            <p style="margin-top: 15px;"><strong>Product Performance:</strong></p>
+            <ul>
+                <li><strong>Sports</strong> is the strongest performer, contributing 25.4% of revenue</li>
+                <li>Top 10 products account for significant portion of orders</li>
+                <li>Product margins range from 33.1% to 98.2%</li>
+            </ul>
+            
+            <p style="margin-top: 15px;"><strong>User Behavior & Conversion:</strong></p>
+            <ul>
+                <li><strong>97.9%</strong> of users are converting to purchasers</li>
+                <li>Newest user cohort shows <strong>34</strong> engaged users</li>
+                <li>Strong engagement with page_view as primary entry point</li>
+            </ul>
+            
+            <p style="margin-top: 15px;"><strong>Actionable Insights:</strong></p>
+            <ul>
+                <li>Focus marketing on <strong>Sports</strong> - driving the most revenue</li>
+                <li>Replicate success of top products across catalog</li>
+                <li>Optimize conversion funnel - target 25%+</li>
+                <li>Monitor newest cohort retention in next 30 days</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>Dashboard generated with dbt (data transformation) + DuckDB (analytics) + Plotly (visualization)</p>
+            <p>All models tested and documented for production readiness</p>
+        </div>
+    </div>
+    
+    <script>
+        // Chart 1: Revenue by Category
+        var trace1 = {
+            x: ["Sports", "Books", "Electronics", "Home & Garden", "Clothing"],
+            y: [527296.95, 424540.59, 386341.91, 375944.36, 363622.26],
+            type: 'bar',
+            marker: {color: '#667eea'}
+        };
+        var layout1 = {
+            title: 'Revenue by Category',
+            xaxis: {title: 'Category'},
+            yaxis: {title: 'Revenue (USD)'},
+            margin: {t: 40, b: 60, l: 80, r: 40},
+            height: 400
+        };
+        Plotly.newPlot('chart1', [trace1], layout1, {responsive: true});
+        
+        // Chart 2: User Cohorts
+        var trace2a = {
+            x: ["0-30 days", "31-90 days", "91-180 days", "180+ days"],
+            y: [34, 89, 109, 268],
+            name: 'Users',
+            type: 'bar',
+            marker: {color: '#667eea'}
+        };
+        var trace2b = {
+            x: ["0-30 days", "31-90 days", "91-180 days", "180+ days"],
+            y: [60, 182, 185, 455],
+            name: 'Orders',
+            type: 'bar',
+            marker: {color: '#764ba2'}
+        };
+        var layout2 = {
+            title: 'Users and Orders by Cohort',
+            xaxis: {title: 'Account Age Cohort'},
+            yaxis: {title: 'Count'},
+            barmode: 'group',
+            margin: {t: 40, b: 60, l: 80, r: 40},
+            height: 400
+        };
+        Plotly.newPlot('chart2', [trace2a, trace2b], layout2, {responsive: true});
+        
+        // Chart 3: Funnel
+        var trace3 = {
+            type: 'funnel',
+            y: ["page_view", "product_view", "search", "add_to_cart", "purchase"],
+            x: [480, 482, 483, 481, 473],
+            textposition: 'inside',
+            textinfo: 'value+percent initial',
+            marker: {color: '#667eea'}
+        };
+        var layout3 = {
+            title: 'User Journey Funnel',
+            margin: {t: 40, b: 60, l: 80, r: 40},
+            height: 400
+        };
+        Plotly.newPlot('chart3', [trace3], layout3, {responsive: true});
+        
+        // Chart 4: Daily Revenue
+        var trace4 = {
+            x: ["2026-01-04", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-11", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-17", "2026-01-18", "2026-01-19", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-24", "2026-01-25", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-30", "2026-01-31", "2026-02-01", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05"],
+            y: [3928.07, 4727.89, 4228.28, 7071.12, 3399.28, 4054.15, 4787.15, 8406.3, 12167.67, 3070.92, 6490.62, 3814.93, 8267.83, 6064.21, 2233.57, 6253.54, 4849.17, 5812.06, 3573.27, 7058.41, 12785.97, 2593.92, 3174.64, 621.02, 7198.5, 15471.48, 5622.95, 3730.04, 3965.93, 10530.06],
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: {color: '#667eea', size: 6},
+            line: {color: '#667eea', width: 2}
+        };
+        var layout4 = {
+            title: 'Daily Revenue Trend',
+            xaxis: {title: 'Date'},
+            yaxis: {title: 'Revenue (USD)'},
+            margin: {t: 40, b: 60, l: 80, r: 40},
+            height: 400,
+            hovermode: 'x unified'
+        };
+        Plotly.newPlot('chart4', [trace4], layout4, {responsive: true});
+        
+        // Chart 5: Top Customers by CLV
+        var trace5 = {
+            x: ["User 384", "User 89", "User 92", "User 405", "User 435", "User 235", "User 383", "User 174", "User 32", "User 445"],
+            y: [19310.24, 18239.8, 18146.6, 17257.38, 16509.05, 15741.36, 15541.8, 14804.79, 14769.96, 14319.1],
+            type: 'bar',
+            marker: {color: '#764ba2'}
+        };
+        var layout5 = {
+            title: 'Top 10 Customers by Lifetime Value',
+            xaxis: {title: 'Customer'},
+            yaxis: {title: 'Lifetime Revenue (USD)'},
+            margin: {t: 40, b: 100, l: 80, r: 40},
+            height: 400
+        };
+        Plotly.newPlot('chart5', [trace5], layout5, {responsive: true});
+        
+        // Chart 6: Category Performance This Month
+        var trace6 = {
+            x: ["Books", "Clothing", "Home & Garden", "Electronics", "Sports"],
+            y: [10837.01, 6939.17, 5961.87, 8441.38, 7141.03],
+            type: 'bar',
+            marker: {color: '#667eea'}
+        };
+        var layout6 = {
+            title: 'Category Revenue (Latest Month)',
+            xaxis: {title: 'Category'},
+            yaxis: {title: 'Revenue (USD)'},
+            margin: {t: 40, b: 60, l: 80, r: 40},
+            height: 400
+        };
+        Plotly.newPlot('chart6', [trace6], layout6, {responsive: true});
+        
+        // Chart 7: Price Tier Performance
+        var trace7a = {
+            x: ["Budget (<$50)", "Mid-Range ($50-150)", "Premium ($150-300)", "Luxury ($300+)"],
+            y: [190, 487, 469, 673],
+            name: 'Orders',
+            type: 'bar',
+            marker: {color: '#667eea'}
+        };
+        var trace7b = {
+            x: ["Budget (<$50)", "Mid-Range ($50-150)", "Premium ($150-300)", "Luxury ($300+)"],
+            y: [17584.82, 233186.2, 457573.79, 1369401.26],
+            name: 'Revenue',
+            type: 'bar',
+            marker: {color: '#764ba2'},
+            yaxis: 'y2'
+        };
+        var layout7 = {
+            title: 'Performance by Price Tier',
+            xaxis: {title: 'Price Tier'},
+            yaxis: {title: 'Orders'},
+            yaxis2: {title: 'Revenue (USD)', overlaying: 'y', side: 'right'},
+            margin: {t: 40, b: 60, l: 80, r: 80},
+            height: 400,
+            barmode: 'group'
+        };
+        Plotly.newPlot('chart7', [trace7a, trace7b], layout7, {responsive: true});
+
+        // Chart 8: Category Revenue Trend Over Time
+        var colors8 = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140', '#30b0fe'];
+        var categoryData = {"Home & Garden": [23945.72, 50205.78, 34805.95, 43636.66, 25358.81, 29595.21, 20879.91, 28642.62, 31801.13, 24618.99, 25141.98, 31349.73, 5961.87], "Clothing": [37610.96, 45757.95, 32842.47, 25860.51, 34980.74, 26847.15, 25706.73, 37101.06, 15038.87, 34979.62, 17472.12, 22484.91, 6939.17], "Electronics": [31693.33, 38457.62, 35143.71, 22337.44, 30495.84, 22892.11, 28554.02, 40370.93, 24447.34, 37365.88, 43856.2, 22286.11, 8441.38], "Books": [32753.74, 46941.52, 33841.18, 35814.6, 36434.4, 24589.27, 29505.5, 26964.52, 34982.43, 47637.59, 30404.02, 33834.81, 10837.01], "Sports": [37209.39, 55324.76, 46275.1, 39235.94, 40437.21, 45466.13, 31930.64, 51709.2, 42973.12, 46951.5, 35412.05, 47230.88, 7141.03]};
+        var monthsList = ["2025-02-01 00:00:00", "2025-03-01 00:00:00", "2025-04-01 00:00:00", "2025-05-01 00:00:00", "2025-06-01 00:00:00", "2025-07-01 00:00:00", "2025-08-01 00:00:00", "2025-09-01 00:00:00", "2025-10-01 00:00:00", "2025-11-01 00:00:00", "2025-12-01 00:00:00", "2026-01-01 00:00:00", "2026-02-01 00:00:00"];
+        var traces8 = [];
+        
+        Object.keys(categoryData).forEach(function(category, index) {
+            var trace = {
+                x: monthsList,
+                y: categoryData[category],
+                name: category,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: {color: colors8[index % colors8.length]}
+            };
+            traces8.push(trace);
+        });
+        
+        var layout8 = {
+            title: 'Category Revenue Trend Over Time',
+            xaxis: {title: 'Month'},
+            yaxis: {title: 'Revenue (USD)'},
+            margin: {t: 40, b: 60, l: 80, r: 80},
+            height: 400,
+            hovermode: 'x unified'
+        };
+        Plotly.newPlot('chart8', traces8, layout8, {responsive: true});
+    </script>
+</body>
+</html>
